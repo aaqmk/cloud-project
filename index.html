@@ -76,21 +76,51 @@
       loadTasks();
     }
  
-    async function loadTasks() {
-      const { data, error } = await db.from("tasks").select("*").order("id");
-      if (error) { alert(error.message); return; }
-      const list = document.getElementById("list");
-      list.innerHTML = "";
-      for (const t of data) {
-        const li = document.createElement("li");
-        li.textContent = t.title + " ";
-        const btn = document.createElement("button");
-        btn.textContent = "×";
-        btn.onclick = () => deleteTask(t.id);
-        li.appendChild(btn);
-        list.appendChild(li);
-      }
+
+async function loadTasks() {
+  const { data, error } = await db.from("tasks").select("*").order("id");
+  if (error) { alert(error.message); return; }
+
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  for (const t of data) {
+    const li = document.createElement("li");
+    li.textContent = t.title + " ";
+
+    // Зачёркиваем выполненные задачи
+    if (t.done) {
+      li.style.textDecoration = "line-through";
     }
+
+    // Кнопка "Сделано"
+    if (!t.done) {
+      const doneBtn = document.createElement("button");
+      doneBtn.textContent = "Сделано";
+      doneBtn.onclick = () => completeTask(t.id);
+      li.appendChild(doneBtn);
+    }
+
+    // Кнопка удаления
+    const btn = document.createElement("button");
+    btn.textContent = "×";
+    btn.onclick = () => deleteTask(t.id);
+    li.appendChild(btn);
+
+    list.appendChild(li);
+  }
+}
+
+async function completeTask(id) {
+  const { error } = await db.from("tasks")
+    .update({ done: true })
+    .eq("id", id);
+
+  if (error) { alert(error.message); return; }
+
+  loadTasks();
+}
+
  
     async function addTask() {
       const title = document.getElementById("task").value.trim();
